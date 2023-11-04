@@ -374,10 +374,10 @@ class FlaxHybridCLIP(FlaxPreTrainedModel):
         }
 
         # remove text, vision kwargs from kwargs
-        for key in kwargs_text.keys():
-            del kwargs["text_" + key]
-        for key in kwargs_vision.keys():
-            del kwargs["vision_" + key]
+        for key in kwargs_text:
+            del kwargs[f"text_{key}"]
+        for key in kwargs_vision:
+            del kwargs[f"vision_{key}"]
 
         # Load and initialize the text and vision model
         text_model = kwargs_text.pop("model", None)
