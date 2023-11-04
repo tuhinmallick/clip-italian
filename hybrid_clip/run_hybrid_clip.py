@@ -23,6 +23,7 @@ Vision models: ViT(https://huggingface.co/models?filter=vit), CLIP (https://hugg
 Text models: BERT, ROBERTa (https://huggingface.co/models?filter=masked-lm)
 """
 
+
 import json
 import logging
 import os
@@ -85,9 +86,7 @@ from numpy.random import default_rng
 
 logger = logging.getLogger(__name__)
 
-# Cache the result
-has_tensorboard = is_tensorboard_available()
-if has_tensorboard:
+if has_tensorboard := is_tensorboard_available():
     try:
         from flax.metrics.tensorboard import SummaryWriter
     except ImportError as ie:
@@ -215,13 +214,12 @@ class DataTrainingArguments:
             raise ValueError(
                 "Need either a dataset name or a training/validation file."
             )
-        else:
-            if self.train_file is not None:
-                extension = self.train_file.split(".")[-1]
-                assert extension == "json", "`train_file` should be a json file."
-            if self.validation_file is not None:
-                extension = self.validation_file.split(".")[-1]
-                assert extension == "json", "`validation_file` should be a json file."
+        if self.train_file is not None:
+            extension = self.train_file.split(".")[-1]
+            assert extension == "json", "`train_file` should be a json file."
+        if self.validation_file is not None:
+            extension = self.validation_file.split(".")[-1]
+            assert extension == "json", "`validation_file` should be a json file."
 
 
 # We use torchvision for faster image pre-processing.
@@ -325,8 +323,7 @@ class ImageTextDataset(VisionDataset):
 
     def _load_image(self, idx: int):
         path = self.image_paths[idx]
-        im = read_image(path, mode=ImageReadMode.RGB)
-        return im
+        return read_image(path, mode=ImageReadMode.RGB)
 
     def _load_target(self, idx):
         return self.rand_generator.choice(self.captions[idx])
@@ -441,10 +438,9 @@ def create_learning_rate_fn(
             decay_steps=num_train_steps - num_warmup_steps,
             alpha=0.0,
         )
-    schedule_fn = optax.join_schedules(
+    return optax.join_schedules(
         schedules=[warmup_fn, decay_fn], boundaries=[num_warmup_steps]
     )
-    return schedule_fn
 
 
 def main():
@@ -821,7 +817,7 @@ def main():
         if jax.process_index() == 0:
             params = jax.device_get(unreplicate(state.params))
             model.save_pretrained(
-                training_args.output_dir + f"/{epoch+1}/",
+                f"{training_args.output_dir}/{epoch + 1}/",
                 params=params,
                 push_to_hub=training_args.push_to_hub,
                 commit_message=f"Saving weights and logs of epoch {epoch+1}",
